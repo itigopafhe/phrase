@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>句動詞学習サイト DEMO v6.2</title>
+    <style>
+        /* (CSSは変更ありません) */
+        :root {
+            --base-bg: #F8F9FA; --main-blue: #007BFF; --accent-orange: #FD7E14;
+            --text-dark: #212529; --text-medium: #6C757D; --border-light: #CED4DA;
+            --success-green: #28a745; --danger-red: #dc3545; --info-purple: #6f42c1;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif; margin: 0; background-color: var(--base-bg); color: var(--text-dark); line-height: 1.7; font-size: 16px; }
+        .header { background-color: var(--main-blue); color: white; padding: 15px 20px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        .header h1 { margin: 0; font-size: 20px; }
+        .container { padding: 20px; }
+        .search-box { position: relative; margin-bottom: 20px; }
+        .search-input { width: 100%; padding: 15px; font-size: 16px; border: 1px solid var(--border-light); border-radius: 8px; box-sizing: border-box; }
+        #search-results { list-style-type: none; padding: 0; margin: 20px 0 0; }
+        #search-results li { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; background-color: white; }
+        #search-results li:hover { background-color: #f0f0f0; }
+        #search-results li .meaning { font-size: 14px; color: var(--text-medium); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .page { display: none; background-color: white; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        #detail-page h2 { font-size: 28px; margin-top: 0; }
+        .back-button { display: inline-block; margin-bottom: 20px; color: var(--main-blue); cursor: pointer; font-weight: bold; }
+        .meaning-block { border-top: 1px solid #eee; padding: 20px 0; }
+        .meaning-block h3 { font-size: 20px; margin-top: 0; margin-bottom: 10px; }
+        .meaning-block .pos { font-size: 14px; color: var(--text-medium); font-style: italic; }
+        .example-sentence { background-color: var(--base-bg); padding: 12px; border-radius: 4px; margin: 10px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+        .example-sentence p { margin: 0; }
+        .my-example-area { margin-top: 15px; }
+        .add-my-example-btn { background: none; border: 1px dashed var(--accent-orange); color: var(--accent-orange); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px; }
+        .my-example-input-area, .meaning-input-area { margin-top: 10px; display: none; background-color: var(--base-bg); padding: 15px; border-radius: 4px;}
+        .my-example-input, .meaning-input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--border-light); border-radius: 4px; margin-bottom: 10px; }
+        .action-buttons { text-align: right; margin-top: 5px; }
+        .action-buttons button { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+        .save-btn { background-color: var(--accent-orange); color: white; }
+        .cancel-btn { background-color: var(--text-medium); color: white; margin-left: 5px; }
+        .controls { display: flex; align-items: center; }
+        .controls button { background: none; border: none; cursor: pointer; font-size: 12px; margin-left: 8px; }
+        .edit-btn { color: var(--main-blue); }
+        .delete-btn { color: var(--danger-red); }
+        .filter-section { margin-bottom: 20px; padding: 15px; background-color: #fff; border-radius: 8px; }
+        .filter-section-header { display: flex; justify-content: space-between; align-items: center; }
+        .filter-section h3 { font-size: 16px; color: var(--text-medium); margin-top: 0; margin-bottom: 10px; }
+        .filter-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+        .filter-btn { background-color: white; border: 1px solid var(--border-light); color: var(--main-blue); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 14px; }
+        .filter-btn.active { background-color: var(--main-blue); color: white; border-color: var(--main-blue); }
+        .data-management-section { background-color: white; padding: 20px; margin-top: 30px; border-radius: 8px; }
+        .toggle-btn { background-color: var(--success-green); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 10px; }
+        .io-btn { background-color: var(--info-purple); } /* Import/Export button color */
+        #bulk-add-area, #manual-add-area, #io-area { margin-top: 15px; border-top: 1px solid var(--border-light); padding-top: 15px; }
+        #bulk-add-input, .manual-input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid var(--border-light); border-radius: 4px; margin-bottom: 10px; }
+        #bulk-add-input { min-height: 150px; font-family: monospace; }
+        .submit-btn { background-color: var(--accent-orange); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .manual-add-meaning-block { background-color: var(--base-bg); padding: 15px; border-radius: 4px; margin-bottom: 15px; }
+        #max-id-display { font-size: 14px; color: var(--text-medium); padding: 5px 10px; background-color: #e9ecef; border-radius: 4px; display: inline-block; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 20px; }
+        .close-modal-btn { font-size: 24px; border: none; background: none; cursor: pointer; }
+        .customize-list { display: flex; flex-wrap: wrap; gap: 10px; list-style-type: none; padding: 0; }
+        .customize-list li { background-color: var(--base-bg); padding: 5px 10px; border-radius: 4px; }
+        #import-file-label { display: inline-block; padding: 10px 15px; background-color: var(--main-blue); color: white; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        #import-file-input { display: none; }
+        #file-name-display { margin-left: 10px; color: var(--text-medium); }
+    </style>
+</head>
+<body>
+    <header class="header"><h1>句動詞学習サイト DEMO v6.2</h1></header>
+    <div class="container">
+        <div id="home-page">
+            <div class="search-box"><input type="text" id="search-input" class="search-input" placeholder="句動詞、意味などで検索..."></div>
+            <div class="filter-section">
+                <div class="filter-section-header"><h3>動詞で探す</h3><button id="customize-filters-btn" class="edit-btn" style="font-size: 12px;">表示ボタンを編集</button></div>
+                <div id="verb-filters" class="filter-buttons"></div>
+                <h3 style="margin-top: 20px;">前置詞/副詞で探す</h3>
+                <div id="particle-filters" class="filter-buttons"></div>
+            </div>
+            <ul id="search-results"></ul>
+            <div class="data-management-section">
+                <button id="show-io-btn" class="toggle-btn io-btn">🔄 データのインポート/エクスポート</button>
+                <div id="io-area" style="display: none;">
+                    <h4>エクスポート</h4><p>現在の全句動詞データをCSVファイルとしてダウンロードします。</p><button id="export-csv-btn" class="submit-btn">CSVをエクスポート</button>
+                    <hr style="margin: 20px 0;">
+                    <h4>インポート</h4><p>CSVファイルを読み込み、データを一括で追加・上書きします。</p>
+                    <input type="file" id="import-file-input" accept=".csv"><label for="import-file-input" id="import-file-label">CSVファイルを選択</label><span id="file-name-display"></span>
+                    <button id="import-csv-btn" class="submit-btn" style="display:none;">インポート実行</button>
+                </div>
+                <button id="show-manual-add-btn" class="toggle-btn">✍️ 新しい句動詞を手動で追加</button>
+                <div id="manual-add-area" style="display: none;">
+                    <p style="font-size:14px; color: var(--text-medium);">現在の最大ID: <strong id="max-id-display">...</strong></p>
+                    <input type="text" id="manual-id" class="manual-input" placeholder="句動詞ID (例: 129...) ※他の単語と違う数字">
+                    <input type="text" id="manual-phrase" class="manual-input" placeholder="句動詞 (例: get up)">
+                    <div id="manual-meanings-container"></div><button id="add-meaning-field-btn" style="margin-bottom: 15px;">+ 意味を追加</button>
+                    <button id="manual-add-submit-btn" class="submit-btn">この句動詞を保存</button>
+                </div>
+                <button id="show-bulk-add-btn" class="toggle-btn">⚙️ 句動詞データの一括追加 (JSON)</button>
+                <div id="bulk-add-area" style="display: none;">
+                    <textarea id="bulk-add-input" placeholder='[{"id": 129, "phrase": "new verb", "meanings": [{"id": 12901, ...}]}]'></textarea>
+                    <button id="bulk-add-submit-btn" class="submit-btn">この内容でデータを追加する</button>
+                </div>
+            </div>
+        </div>
+        <div id="detail-page" class="page"></div>
+    </div>
+    <div id="customize-modal" class="modal-overlay"> <div class="modal-content"> <div class="modal-header"> <h2>表示ボタンのカスタマイズ</h2> <button id="close-modal-btn" class="close-modal-btn">&times;</button> </div> <h3>動詞</h3> <ul id="customize-verb-list" class="customize-list"></ul> <h3 style="margin-top: 20px;">前置詞/副詞</h3> <ul id="customize-particle-list" class="customize-list"></ul> <div class="action-buttons"> <button id="save-filter-prefs-btn" class="save-btn">保存</button> </div> </div> </div>
+
+    <script>
+        // --- 1. データベース設定 ---
+        let phrasalVerbsDB = [];
+        let myExamples = JSON.parse(localStorage.getItem('myPhrasalVerbExamples')) || {};
+        let filterPrefs = JSON.parse(localStorage.getItem('phrasalVerbFilterPrefs')) || null;
+        const initialDB = [ { id: 1, phrase: "take off", meanings: [{ id: 101, meaning: "離陸する", pos: "自動詞", example: "The plane took off on time." }]} ];
+
+        // --- 2. DOM要素の取得 ---
+        const searchInput = document.getElementById('search-input'), searchResults = document.getElementById('search-results');
+        const homePage = document.getElementById('home-page'), detailPage = document.getElementById('detail-page');
+        const showBulkAddBtn = document.getElementById('show-bulk-add-btn'), bulkAddArea = document.getElementById('bulk-add-area'), bulkAddInput = document.getElementById('bulk-add-input'), bulkAddSubmitBtn = document.getElementById('bulk-add-submit-btn');
+        const showManualAddBtn = document.getElementById('show-manual-add-btn'), manualAddArea = document.getElementById('manual-add-area'), manualAddSubmitBtn = document.getElementById('manual-add-submit-btn'), addMeaningFieldBtn = document.getElementById('add-meaning-field-btn');
+        const maxIdDisplay = document.getElementById('max-id-display');
+        const customizeFiltersBtn = document.getElementById('customize-filters-btn'), customizeModal = document.getElementById('customize-modal'), closeModalBtn = document.getElementById('close-modal-btn'), saveFilterPrefsBtn = document.getElementById('save-filter-prefs-btn');
+        const showIoBtn = document.getElementById('show-io-btn'), ioArea = document.getElementById('io-area'), exportCsvBtn = document.getElementById('export-csv-btn'), importFileInput = document.getElementById('import-file-input'), importCsvBtn = document.getElementById('import-csv-btn'), fileNameDisplay = document.getElementById('file-name-display');
+        
+        // =================================================================
+        // --- アプリケーションの初期化 ---
+        // =================================================================
+        function initializeApp() {
+            const savedDB = localStorage.getItem('phrasalVerbsDB');
+            phrasalVerbsDB = savedDB ? JSON.parse(savedDB) : initialDB;
+            generateFilterButtons();
+            setupEventListeners();
+            addMeaningField(); // 手動追加フォーム用に初期の一つを用意
+        }
+
+        function setupEventListeners() {
+            searchInput.addEventListener('input', handleSearch);
+            showBulkAddBtn.addEventListener('click', () => toggleArea(bulkAddArea));
+            bulkAddSubmitBtn.addEventListener('click', handleBulkAdd);
+            showManualAddBtn.addEventListener('click', () => { toggleArea(manualAddArea); displayMaxId(); });
+            addMeaningFieldBtn.addEventListener('click', addMeaningField);
+            manualAddSubmitBtn.addEventListener('click', handleManualAdd);
+            customizeFiltersBtn.addEventListener('click', openCustomizeModal);
+            closeModalBtn.addEventListener('click', () => customizeModal.style.display = 'none');
+            saveFilterPrefsBtn.addEventListener('click', saveFilterPrefs);
+            showIoBtn.addEventListener('click', () => toggleArea(ioArea));
+            exportCsvBtn.addEventListener('click', exportToCsv);
+            importFileInput.addEventListener('change', handleFileSelect);
+            importCsvBtn.addEventListener('click', handleCsvImport);
+        }
+        
+        // =================================================================
+        // --- 意味のCRUD (Create, Read, Update, Delete) 機能 ---
+        // =================================================================
+        
+        function showAddMeaningForm(verbId) {
+            const formContainer = document.getElementById('add-meaning-form-container');
+            if (!formContainer) return;
+            const verb = phrasalVerbsDB.find(v => v.id === verbId);
+            const suggestedId = verbId + "0" + (verb.meanings.length + 1);
+            
+            formContainer.style.display = 'block';
+            formContainer.innerHTML = `
+                <h4>新しい意味を追加</h4>
+                <input type="text" class="meaning-input" id="new-meaning-id" value="${suggestedId}" placeholder="意味ID">
+                <input type="text" class="meaning-input" id="new-meaning-text" placeholder="意味">
+                <input type="text" class="meaning-input" id="new-meaning-pos" placeholder="品詞">
+                <input type="text" class="meaning-input" id="new-meaning-example" placeholder="公式例文">
+                <div class="action-buttons">
+                    <button class="save-btn" onclick="saveNewMeaning(${verbId})">保存</button>
+                    <button class="cancel-btn" onclick="hideAddMeaningForm()">キャンセル</button>
+                </div>`;
+        }
+        
+        function hideAddMeaningForm() {
+            const formContainer = document.getElementById('add-meaning-form-container');
+            if (formContainer) {
+                formContainer.style.display = 'none';
+                formContainer.innerHTML = '';
+            }
+        }
+
+        function saveNewMeaning(verbId) {
+            try {
+                const newMeaningId = parseInt(document.getElementById('new-meaning-id').value);
+                const newMeaningText = document.getElementById('new-meaning-text').value.trim();
+                const verb = phrasalVerbsDB.find(v => v.id === verbId);
+
+                if (!newMeaningId || !newMeaningText) throw new Error("意味IDと意味は必須です。");
+                if (verb.meanings.some(m => m.id == newMeaningId)) throw new Error("この意味IDは既に使用されています。");
+
+                verb.meanings.push({
+                    id: newMeaningId,
+                    meaning: newMeaningText,
+                    pos: document.getElementById('new-meaning-pos').value.trim() || "",
+                    example: document.getElementById('new-meaning-example').value.trim() || ""
+                });
+                
+                updateDatabaseAndUI();
+                showDetailPage(verbId);
+            } catch (e) {
+                alert("エラー: " + e.message);
+            }
+        }
+
+        function editMeaning(verbId, meaningId) {
+            const verb = phrasalVerbsDB.find(v => v.id === verbId);
+            const meaning = verb.meanings.find(m => m.id === meaningId);
+            const block = document.querySelector(`.meaning-block[data-meaning-id='${meaningId}']`);
+            
+            block.innerHTML = `
+                <div class="meaning-input-area" style="display:block;">
+                    <input type="text" class="meaning-input" id="edit-meaning-${meaningId}" value="${meaning.meaning}">
+                    <input type="text" class="meaning-input" id="edit-pos-${meaningId}" value="${meaning.pos}" placeholder="品詞">
+                    <input type="text" class="meaning-input" id="edit-example-${meaningId}" value="${meaning.example}" placeholder="公式例文">
+                    <div class="action-buttons">
+                        <button class="save-btn" onclick="saveMeaning(${verbId}, ${meaningId})">保存</button>
+                        <button class="cancel-btn" onclick="showDetailPage(${verbId})">キャンセル</button>
+                    </div>
+                </div>`;
+        }
+
+        function saveMeaning(verbId, meaningId) {
+            const verb = phrasalVerbsDB.find(v => v.id === verbId);
+            const meaning = verb.meanings.find(m => m.id === meaningId);
+            meaning.meaning = document.getElementById(`edit-meaning-${meaningId}`).value;
+            meaning.pos = document.getElementById(`edit-pos-${meaningId}`).value;
+            meaning.example = document.getElementById(`edit-example-${meaningId}`).value;
+            updateDatabaseAndUI();
+            showDetailPage(verbId);
+        }
+
+        function deleteMeaning(verbId, meaningId) {
+            if (!confirm("この意味を本当に削除しますか？\n関連するマイ例文も削除されます。")) return;
+            const verb = phrasalVerbsDB.find(a => a.id === verbId);
+            verb.meanings = verb.meanings.filter(m => m.id !== meaningId);
+            if (myExamples[meaningId]) {
+                delete myExamples[meaningId];
+                localStorage.setItem('myPhrasalVerbExamples', JSON.stringify(myExamples));
+            }
+            updateDatabaseAndUI();
+            if (verb.meanings.length === 0) { // もし意味がなくなったら
+                if (confirm("全ての意味が削除されました。この句動詞自体を削除しますか？")) {
+                    phrasalVerbsDB = phrasalVerbsDB.filter(v => v.id !== verbId);
+                    updateDatabaseAndUI();
+                    showHomePage();
+                } else {
+                    showDetailPage(verbId);
+                }
+            } else {
+                showDetailPage(verbId);
+            }
+        }
+        
+        // --- 詳細ページの表示ロジック (重要部分を修正) ---
+        function showDetailPage(verbId) {
+            const verb = phrasalVerbsDB.find(v => v.id === verbId);
+            if (!verb) { showHomePage(); return; }
+
+            const meaningsHtml = verb.meanings.map(m => `
+                <div class="meaning-block" data-meaning-id="${m.id}">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <h3>${m.meaning} <span class="pos">${m.pos}</span></h3>
+                        </div>
+                        <div class="controls">
+                            <button class="edit-btn" onclick="editMeaning(${verb.id}, ${m.id})">編集</button>
+                            <button class="delete-btn" onclick="deleteMeaning(${verb.id}, ${m.id})">削除</button>
+                        </div>
+                    </div>
+                    <div class="example-sentence"><p><strong>公式例文:</strong> ${m.example || '―'}</p></div>
+                    <div class="my-example-area">
+                        <div id="my-example-list-${m.id}"></div>
+                        <button class="add-my-example-btn" onclick="showInputArea(${m.id})">⊕ この意味でマイ例文を追加</button>
+                        <div class="my-example-input-area" id="input-area-${m.id}">
+                            <textarea class="my-example-input" placeholder="..."></textarea>
+                            <div class="action-buttons"><button class="save-btn" onclick="saveMyExample(${m.id})">保存</button><button class="cancel-btn" onclick="hideInputArea(${m.id})">キャンセル</button></div>
+                        </div>
+                    </div>
+                </div>`).join('');
+            
+            // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            // ★ ここが今回の修正の核となる部分です ★
+            // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            detailPage.innerHTML = `
+                <div class="back-button" onclick="showHomePage()">＜ 戻る</div>
+                <h2>${verb.phrase}</h2>
+                ${meaningsHtml}
+                <div id="add-meaning-form-container" class="meaning-input-area"></div>
+                <button class="add-my-example-btn" style="margin-top:20px;" onclick="showAddMeaningForm(${verb.id})">⊕ この句動詞に意味を追加</button>
+            `;
+
+            verb.meanings.forEach(m => renderMyExamples(m.id));
+            homePage.style.display = 'none';
+            detailPage.style.display = 'block';
+        }
+        
+        // (これ以降のJavaScriptコードは、v6.1から大きな変更はありません)
+        function toggleArea(a){a.style.display=a.style.display==='none'?'block':'none'}
+        function displayMaxId(){const m=phrasalVerbsDB.reduce((m,v)=>v.id>m?v.id:m,0);maxIdDisplay.textContent=m}
+        function updateDatabaseAndUI(){localStorage.setItem('phrasalVerbsDB',JSON.stringify(phrasalVerbsDB));generateFilterButtons();displayMaxId()}
+        function exportToCsv(){let e="data:text/csv;charset=utf-8,\uFEFF";e+="verb_id,phrase,meaning_id,meaning,pos,example\n",phrasalVerbsDB.forEach(t=>{t.meanings.forEach(a=>{const i=[t.id,`"${t.phrase}"`,a.id,`"${a.meaning.replace(/"/g,'""')}"`,`"${a.pos}"`,`"${a.example.replace(/"/g,'""')}"`].join(",");e+=i+"\n"})});const t=encodeURI(e),a=document.createElement("a");a.setAttribute("href",t),a.setAttribute("download","phrasal_verbs_export.csv"),document.body.appendChild(a),a.click(),document.body.removeChild(a),alert("CSVファイルのエクスポートが完了しました。")}let importedCsvData=null;
+        function handleFileSelect(e){const t=e.target.files[0];if(!t)return;fileNameDisplay.textContent=t.name;const a=new FileReader;a.onload=function(e){importedCsvData=e.target.result,importCsvBtn.style.display="inline-block"},a.readAsText(t)}
+        function handleCsvImport(){if(!importedCsvData)return void alert("ファイルが選択されていません。");if(!confirm("CSVファイルをインポートします。既存のデータはIDが一致する場合に上書きされます。よろしいですか？"))return;try{const e=importedCsvData.split("\n").slice(1),t={};e.forEach(e=>{if(""===e.trim())return;const a=e.split(",").map(e=>e.trim().replace(/^"|"$/g,"").replace(/""/g,'"')),i=parseInt(a[0]),n=a[1],r=parseInt(a[2]),s=a[3],l=a[4],o=a[5];t[i]||(t[i]={id:i,phrase:n,meanings:[]}),t[i].meanings.push({id:r,meaning:s,pos:l,example:o})});const a=Object.values(t);a.forEach(e=>{const t=phrasalVerbsDB.findIndex(t=>t.id===e.id);t>-1?phrasalVerbsDB[t]=e:phrasalVerbsDB.push(e)}),updateDatabaseAndUI(),alert("インポートが完了しました。"),fileNameDisplay.textContent="",importCsvBtn.style.display="none",importedCsvData=null}catch(e){alert("CSVファイルの読み込みに失敗しました。形式を確認してください。\nエラー: "+e.message)}}
+        function openCustomizeModal(){const a=[...new Set(phrasalVerbsDB.map(p=>p.phrase.split(' ')[0]))].sort(),p=[...new Set(phrasalVerbsDB.flatMap(p=>p.phrase.split(' ').slice(1)))].sort();const s=filterPrefs?filterPrefs.verbs:a,e=filterPrefs?filterPrefs.particles:p;const t=document.getElementById('customize-verb-list');t.innerHTML=a.map(a=>`<li><label><input type="checkbox" value="${a}" ${s.includes(a)?'checked':''}> ${a}</label></li>`).join('');const l=document.getElementById('customize-particle-list');l.innerHTML=p.map(a=>`<li><label><input type="checkbox" value="${a}" ${e.includes(a)?'checked':''}> ${a}</label></li>`).join('');customizeModal.style.display='flex'}
+        function saveFilterPrefs(){const e=Array.from(document.querySelectorAll('#customize-verb-list input:checked')).map(e=>e.value),t=Array.from(document.querySelectorAll('#customize-particle-list input:checked')).map(e=>e.value);filterPrefs={verbs:e,particles:t};localStorage.setItem('phrasalVerbFilterPrefs',JSON.stringify(filterPrefs));generateFilterButtons();customizeModal.style.display='none'}
+        let meaningFieldCount=0;function addMeaningField(){meaningFieldCount++;const e=document.getElementById("manual-meanings-container"),t=document.createElement("div");t.className="manual-add-meaning-block",t.innerHTML=`<strong>意味 #${meaningFieldCount}</strong><input type="text" class="manual-input manual-meaning-id" placeholder="意味ID (例: 12901...)"><input type="text" class="manual-input manual-meaning" placeholder="意味"><input type="text" class="manual-input manual-pos" placeholder="品詞"><input type="text" class="manual-input manual-example" placeholder="公式例文">`,e.appendChild(t)}
+        function handleManualAdd(){try{const e=parseInt(document.getElementById("manual-id").value),t=document.getElementById("manual-phrase").value.trim();if(!e||!t)throw new Error("IDと句動詞は必須");if(phrasalVerbsDB.some(t=>t.id===e))throw new Error(`ID ${e}は使用済`);const a=[];if(document.querySelectorAll(".manual-add-meaning-block").forEach(e=>{const t=parseInt(e.querySelector(".manual-meaning-id").value),i=e.querySelector(".manual-meaning").value.trim();t&&i&&a.push({id:t,meaning:i,pos:e.querySelector(".manual-pos").value.trim(),example:e.querySelector(".manual-example").value.trim()})}),0===a.length)throw new Error("最低1つの有効な意味が必要");phrasalVerbsDB.push({id:e,phrase:t,meanings:a}),updateDatabaseAndUI(),alert(`「${t}」を追加`),manualAddArea.style.display="none",document.getElementById("manual-id").value="",document.getElementById("manual-phrase").value="",document.getElementById("manual-meanings-container").innerHTML="",meaningFieldCount=0,addMeaningField()}catch(e){alert("エラー: "+e.message)}}
+        function handleBulkAdd(){try{const e=JSON.parse(bulkAddInput.value);if(!Array.isArray(e))throw new Error("データは配列形式");let t=0;e.forEach(a=>{a.id&&a.phrase&&a.meanings&&!phrasalVerbsDB.some(e=>e.id===a.id)&&(phrasalVerbsDB.push(a),t++)}),t>0?(updateDatabaseAndUI(),alert(`${t}件を追加`),bulkAddInput.value="",bulkAddArea.style.display="none"):alert("追加できるデータがありません")}catch(e){alert("エラー: "+e.message)}}
+        function generateFilterButtons(){const e=document.getElementById("verb-filters"),t=document.getElementById("particle-filters");e.innerHTML="",t.innerHTML="";const a=[...new Set(phrasalVerbsDB.map(e=>e.phrase.split(" ")[0]))].sort(),i=[...new Set(phrasalVerbsDB.flatMap(e=>e.phrase.split(" ").slice(1)))].sort();null===filterPrefs&&(filterPrefs={verbs:a,particles:i});const n=filterPrefs.verbs,l=filterPrefs.particles;n.forEach(t=>{const a=document.createElement("button");a.className="filter-btn",a.textContent=t,a.dataset.verb=t,a.onclick=()=>filterBy("verb",t),e.appendChild(a)}),l.forEach(e=>{if(!e)return;const a=document.createElement("button");a.className="filter-btn",a.textContent=e,a.dataset.particle=e,a.onclick=()=>filterBy("particle",e),t.appendChild(a)})}
+        function filterBy(e,t){let a;a="verb"===e?phrasalVerbsDB.filter(a=>a.phrase.split(" ")[0]===t):phrasalVerbsDB.filter(e=>e.phrase.split(" ").slice(1).includes(t)),displayResults(a),document.querySelectorAll(".filter-btn").forEach(e=>e.classList.remove("active")),document.querySelector(`.filter-btn[data-${e}='${t}']`).classList.add("active")}
+        function displayResults(e){searchResults.innerHTML="",0===e.length?searchResults.innerHTML="<li>該当なし</li>":e.forEach(t=>{const a=document.createElement("li");a.innerHTML=`<div class="phrase">${t.phrase}</div><div class="meaning">${t.meanings.map(e=>e.meaning).join("、")}</div>`,a.onclick=()=>showDetailPage(t.id),searchResults.appendChild(a)})}
+        function handleSearch(e){document.querySelectorAll(".filter-btn").forEach(e=>e.classList.remove("active"));const t=e.target.value.toLowerCase();if(!t)return void(searchResults.innerHTML="");const a=phrasalVerbsDB.filter(e=>e.phrase.toLowerCase().includes(t)||e.meanings.some(e=>e.meaning.includes(t)));displayResults(a)}
+        function showHomePage(){detailPage.style.display="none",homePage.style.display="block",searchInput.value="",searchResults.innerHTML="",document.querySelectorAll(".filter-btn").forEach(e=>e.classList.remove("active")),searchInput.focus()}
+        function saveMyExample(e,t=null){const a=null!==t,i=a?`edit-area-${e}-${t}`:`input-area-${e}`,n=document.getElementById(i),l=n.querySelector("textarea"),s=l.value.trim();s&&(myExamples[e]||(myExamples[e]=[]),a?myExamples[e][t]=s:myExamples[e].push(s),localStorage.setItem("myPhrasalVerbExamples",JSON.stringify(myExamples)),a||(l.value="",hideInputArea(e)),renderMyExamples(e))}
+        function renderMyExamples(e){const t=document.getElementById(`my-example-list-${e}`);if(!t)return;const a=myExamples[e]||[];t.innerHTML=a.map((t,a)=>`<div class="example-sentence" id="my-example-${e}-${a}"><p><strong>マイ例文:</strong> ${t.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p><div class="controls"><button class="edit-btn" onclick="editMyExample(${e},${a})">編集</button><button class="delete-btn" onclick="deleteMyExample(${e},${a})">削除</button></div></div><div class="my-example-input-area" id="edit-area-${e}-${a}"></div>`).join("")}
+        function editMyExample(e,t){const a=myExamples[e][t],i=document.getElementById(`edit-area-${e}-${t}`),n=document.getElementById(`my-example-${e}-${t}`);n.style.display="none",i.style.display="block",i.innerHTML=`<textarea class="my-example-input">${a}</textarea><div class="action-buttons"><button class="save-btn" onclick="saveMyExample(${e},${t})">変更を保存</button><button class="cancel-btn" onclick="renderMyExamples(${e})">キャンセル</button></div>`}
+        function deleteMyExample(e,t){confirm("この例文を本当に削除しますか？")&&(myExamples[e].splice(t,1),localStorage.setItem("myPhrasalVerbExamples",JSON.stringify(myExamples)),renderMyExamples(e))}
+        function showInputArea(e){document.getElementById(`input-area-${e}`).style.display="block"}
+        function hideInputArea(e){document.getElementById(`input-area-${e}`).style.display="none"}
+        
+        initializeApp();
+    </script>
+</body>
+</html>
